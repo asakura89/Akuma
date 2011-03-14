@@ -1,0 +1,9 @@
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\bin\Debug\asmTimex.exe
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\bin\Debug\asmTimex.pdb
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\obj\Debug\asmTimex.MainForm.resources
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\obj\Debug\asmTimex.Properties.Resources.resources
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\obj\Debug\asmTimex.csproj.GenerateResource.Cache
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\obj\Debug\asmTimex.exe
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\obj\Debug\asmTimex.pdb
+C:\Users\asakura89\Documents\Visual Studio 2008\Projects\asmTimex\bin\Debug\bg.png
