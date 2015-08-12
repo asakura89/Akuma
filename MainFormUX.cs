@@ -1,21 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-
-using System.IO;
-
-using System.Runtime.InteropServices;
-using System.Drawing.Drawing2D;
 using System.Diagnostics;
-
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Finisar.SQLite;
 
-namespace asmTimex
+namespace Akuma
 {
     public partial class MainFormUX : Form
     {
@@ -24,10 +18,10 @@ namespace asmTimex
         public const int WM_NCLBUTTONDOWN = 0xA1;
         public const int HT_CAPTION = 0x2;
 
-        [DllImportAttribute("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
-        [DllImportAttribute("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern bool ReleaseCapture();
 
         private void MainFormUX_MouseDown(object sender, MouseEventArgs e)

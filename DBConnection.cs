@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using Finisar.SQLite;
 
-namespace asmTimex
+namespace Akuma
 {
     public class DBConnection
     {

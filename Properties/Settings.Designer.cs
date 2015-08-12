@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace asmTimex.Properties {
+namespace Akuma.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

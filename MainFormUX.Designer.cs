@@ -1,4 +1,4 @@
-﻿namespace asmTimex
+﻿namespace Akuma
 {
     partial class MainFormUX
     {
