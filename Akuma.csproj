@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DBConnection.cs" />
-    <Compile Include="JobDeskRepository.cs" />
+    <Compile Include="Task.cs" />
     <Compile Include="MainFormUX.cs">
       <SubType>Form</SubType>
     </Compile>

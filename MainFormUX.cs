@@ -73,7 +73,7 @@ namespace Akuma
         {
             base.WndProc(ref m);
 
-            if (m.Msg == WM_NCHITTEST && m.Result.ToInt32() == HT_CLIENT && this.IsOnGlass(m.LParam.ToInt32()))
+            if (m.Msg == WM_NCHITTEST && m.Result.ToInt32() == HT_CLIENT && IsOnGlass(m.LParam.ToInt32()))
             {
                 m.Result = new IntPtr(HT_CAPTION);
             }
@@ -81,13 +81,13 @@ namespace Akuma
 
         private bool IsOnGlass(int lParam)
         {
-            if (!this.isGlassEnabled())
+            if (!isGlassEnabled())
                 return false;
 
             int x = (lParam << 16) >> 16;
             int y = lParam >> 16;
 
-            Point p = this.PointToClient(new Point(x, y));
+            Point p = PointToClient(new Point(x, y));
 
             if (_botRect.Contains(p))
                 return true;
@@ -99,7 +99,7 @@ namespace Akuma
         #endregion
 
         private Stopwatch _st;
-        private List<JobDeskRepository> _lstDo = new List<JobDeskRepository>();
+        private List<Task> _lstDo = new List<Task>();
         private DateTime _starttime;
         private DateTime _endtime;
 
@@ -124,10 +124,10 @@ namespace Akuma
         {
             InitializeComponent();
 
-            this.Size = new Size(169, 249);
+            Size = new Size(169, 249);
 
             _st = new Stopwatch();
-            _lstDo = new List<JobDeskRepository>();
+            _lstDo = new List<Task>();
             _dblocation = AppDomain.CurrentDomain.BaseDirectory + DB_NAME;
             _constring = "Data Source=" + _dblocation + ";Version=3;Compress=false;";
 
@@ -136,7 +136,7 @@ namespace Akuma
             _marg.Right = 0;
             _marg.Bottom = -1;
 
-            //DwmExtendFrameIntoClientArea(this.Handle, ref _marg);
+            //DwmExtendFrameIntoClientArea(Handle, ref _marg);
         }
 
         private String Duration
@@ -191,35 +191,35 @@ namespace Akuma
         {
             Started = false;
             _st.Reset();
-            this.lnkSt.Text = "Start";
-            this.lblTime.Text = "";
-            this.txtDo.Text = "";
+            lnkSt.Text = "Start";
+            lblTime.Text = "";
+            txtDo.Text = "";
             FocusChanged();
-            this._starttime = new DateTime();
-            this._endtime = new DateTime();
-            this.timex.Stop();
-            this.timex.Enabled = false;
+            _starttime = new DateTime();
+            _endtime = new DateTime();
+            timex.Stop();
+            timex.Enabled = false;
         }
 
         private void FocusChanged()
         {
-            if (this.txtDo.Text.Equals("What you are doing ?"))
+            if (txtDo.Text.Equals("What you are doing ?"))
             {
-                this.txtDo.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-                this.txtDo.ForeColor = SystemColors.WindowText;
-                this.txtDo.Text = "";
+                txtDo.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+                txtDo.ForeColor = SystemColors.WindowText;
+                txtDo.Text = "";
             }
-            else if (this.txtDo.Text.Equals(String.Empty))
+            else if (txtDo.Text.Equals(String.Empty))
             {
-                this.txtDo.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
-                this.txtDo.ForeColor = Color.DarkGray;
-                this.txtDo.Text = "What you are doing ?";
+                txtDo.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
+                txtDo.ForeColor = Color.DarkGray;
+                txtDo.Text = "What you are doing ?";
             }
         }
 
-        private JobDeskRepository convertRaw2Repo(String strJobDate, String strJobDeskName, String strTotalTime, String strTimespan, DateTime dtStart, DateTime dtStop)
+        private Task convertRaw2Repo(String strJobDate, String strJobDeskName, String strTotalTime, String strTimespan, DateTime dtStart, DateTime dtStop)
         {
-            JobDeskRepository retJobRepo = new JobDeskRepository();
+            Task retJobRepo = new Task();
 
             retJobRepo.JobDate = strJobDate;
             retJobRepo.JobDeskName = strJobDeskName;
@@ -231,9 +231,9 @@ namespace Akuma
             return retJobRepo;
         }
 
-        private void setData(JobDeskRepository lastDo)
+        private void setData(Task lastDo)
         {
-            List<JobDeskRepository> lstRepo = new List<JobDeskRepository>();
+            List<Task> lstRepo = new List<Task>();
 
             try
             {
@@ -300,9 +300,9 @@ namespace Akuma
             }
         }
 
-        private List<JobDeskRepository> getData()
+        private List<Task> getData()
         {
-            List<JobDeskRepository> retLstJob = new List<JobDeskRepository>();
+            List<Task> retLstJob = new List<Task>();
 
             try
             {
@@ -337,9 +337,9 @@ namespace Akuma
             return retLstJob;
         }
 
-        private List<JobDeskRepository> getData(String strJobDate)
+        private List<Task> getData(String strJobDate)
         {
-            List<JobDeskRepository> retLstJob = new List<JobDeskRepository>();
+            List<Task> retLstJob = new List<Task>();
 
             try
             {
@@ -378,146 +378,230 @@ namespace Akuma
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            //if (isGlassSupported == false)
-            //{
-            //    Rectangle BaseRectangle = new Rectangle(0, 0, this.Width - 1, this.Height - 1);
+            try
+            {
+                //if (isGlassSupported == false)
+                //{
+                //    Rectangle BaseRectangle = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            //    Brush Gradient_Brush =
-            //        new LinearGradientBrush(
-            //        BaseRectangle,
-            //        Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31),
-            //        LinearGradientMode.Vertical);
+                //    Brush Gradient_Brush =
+                //        new LinearGradientBrush(
+                //        BaseRectangle,
+                //        Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31),
+                //        LinearGradientMode.Vertical);
 
-            //    e.Graphics.FillRectangle(Gradient_Brush, BaseRectangle);
-            //}
-            //else
-            //{
-            //    //this.FormBorderStyle = FormBorderStyle.Sizable; 
-            //    _botRect = this.ClientRectangle; //new Rectangle(0, 0, this.ClientSize.Width, marg.Bottom);
-            //}
+                //    e.Graphics.FillRectangle(Gradient_Brush, BaseRectangle);
+                //}
+                //else
+                //{
+                //    //FormBorderStyle = FormBorderStyle.Sizable; 
+                //    _botRect = ClientRectangle; //new Rectangle(0, 0, ClientSize.Width, marg.Bottom);
+                //}
 
-            Rectangle BaseRectangle = new Rectangle(0, 0, this.Width - 1, this.Height - 1);
+                Rectangle BaseRectangle = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            Brush Gradient_Brush =
-                new LinearGradientBrush(
-                BaseRectangle,
-                Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31),
-                LinearGradientMode.Vertical);
+                Brush Gradient_Brush =
+                    new LinearGradientBrush(
+                    BaseRectangle,
+                    Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31),
+                    LinearGradientMode.Vertical);
 
-            e.Graphics.FillRectangle(Gradient_Brush, BaseRectangle);
+                e.Graphics.FillRectangle(Gradient_Brush, BaseRectangle);
 
-            base.OnPaint(e);
+                base.OnPaint(e);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         #endregion
 
         private void txtDo_Enter(object sender, EventArgs e)
         {
-            FocusChanged();
+            try
+            {
+                FocusChanged();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void txtDo_Leave(object sender, EventArgs e)
         {
-            FocusChanged();
+            try
+            {
+                FocusChanged();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void lnkExit_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Application.Exit();
+            try
+            {
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void lnkTimesheet_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (Expanded)
+            try
             {
-                Expanded = false;
-                this.lnkTimesheet.Text = "Expand Timesheet";
-                this.Size = new Size(169, 249);
+                if (Expanded)
+                {
+                    Expanded = false;
+                    lnkTimesheet.Text = "Expand Timesheet";
+                    Size = new Size(169, 249);
+                }
+                else
+                {
+                    Expanded = true;
+                    lnkTimesheet.Text = "Collapse Timesheet";
+                    Size = new Size(613, 249);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Expanded = true;
-                this.lnkTimesheet.Text = "Collapse Timesheet";
-                this.Size = new Size(613, 249);
+                MessageBox.Show(ex.Message);
             }
         }
 
         private void lnkSt_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (Started)
+            try
             {
-                this._st.Stop();
-                this.lblTime.Text = Duration;
-                this._endtime = DateTime.Now;
+                if (Started)
+                {
+                    _st.Stop();
+                    lblTime.Text = Duration;
+                    _endtime = DateTime.Now;
 
-                JobDeskRepository jobdesk = new JobDeskRepository();
-                jobdesk.JobDate = String.Format("{0:MMM d, yyyy}", this._starttime);
-                jobdesk.Start = this._starttime;
-                jobdesk.Stop = this._endtime;
-                jobdesk.JobDeskName = this.txtDo.Text;
-                jobdesk.TotalTime = Duration;
-                jobdesk.Timespan = String.Format("{0:h:mm tt}", this._starttime) + " - " + String.Format("{0:h:mm tt}", this._endtime);
+                    Task jobdesk = new Task();
+                    jobdesk.JobDate = String.Format("{0:MMM d, yyyy}", _starttime);
+                    jobdesk.Start = _starttime;
+                    jobdesk.Stop = _endtime;
+                    jobdesk.JobDeskName = txtDo.Text;
+                    jobdesk.TotalTime = Duration;
+                    jobdesk.Timespan = String.Format("{0:h:mm tt}", _starttime) + " - " + String.Format("{0:h:mm tt}", _endtime);
 
-                this._lstDo.Add(jobdesk);
-                this.dgvTimeSheet.DataSource = null;
-                this.dgvTimeSheet.DataSource = this._lstDo;
-                this.dgvTimeSheet.Columns["Start"].Visible = false;
-                this.dgvTimeSheet.Columns["Stop"].Visible = false;
+                    _lstDo.Add(jobdesk);
+                    dgvTimeSheet.DataSource = null;
+                    dgvTimeSheet.DataSource = _lstDo;
+                    dgvTimeSheet.Columns["Start"].Visible = false;
+                    dgvTimeSheet.Columns["Stop"].Visible = false;
 
-                ResetTimex();
+                    ResetTimex();
 
 
+                }
+                else
+                {
+                    _st.Start();
+                    timex.Enabled = true;
+                    timex.Start();
+                    Started = true;
+                    _starttime = DateTime.Now;
+                    lblTime.Text = "";
+                    lnkSt.Text = "Stop";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                _st.Start();
-                this.timex.Enabled = true;
-                this.timex.Start();
-                Started = true;
-                this._starttime = DateTime.Now;
-                this.lblTime.Text = "";
-                this.lnkSt.Text = "Stop";
+                MessageBox.Show(ex.Message);
             }
         }
 
         private void timex_Tick(object sender, EventArgs e)
         {
-            this.lblTime.Text = Duration;
+            try
+            {
+                lblTime.Text = Duration;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            try
+            {
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void hideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Hide();
-            this.WindowState = FormWindowState.Minimized;
+            try
+            {
+                Hide();
+                WindowState = FormWindowState.Minimized;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void exitToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            try
+            {
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void showToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Show();
-            this.WindowState = FormWindowState.Normal;
+            try
+            {
+                Show();
+                WindowState = FormWindowState.Normal;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void trayIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (this.WindowState == FormWindowState.Minimized)
+            try
             {
-                this.Show();
-                this.WindowState = FormWindowState.Normal;
+                if (WindowState == FormWindowState.Minimized)
+                {
+                    Show();
+                    WindowState = FormWindowState.Normal;
+                }
+                else
+                {
+                    Hide();
+                    WindowState = FormWindowState.Minimized;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                this.Hide();
-                this.WindowState = FormWindowState.Minimized;
+                MessageBox.Show(ex.Message);
             }
         }
     }
