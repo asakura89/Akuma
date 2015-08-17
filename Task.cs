@@ -2,7 +2,7 @@
 
 namespace Akuma
 {
-    public class JobDeskRepository
+    public class Task
     {
         public String JobDate { get; set; }
         public DateTime Start { get; set; }
