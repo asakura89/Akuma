@@ -1,28 +1,55 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.IO;
 using System.Runtime.InteropServices;
+using System.Transactions;
 using System.Windows.Forms;
-using Finisar.SQLite;
+using Databossy;
 
 namespace Akuma
 {
     public partial class MainFormUX : Form
     {
-        #region movable form without border
-
         public const int WM_NCLBUTTONDOWN = 0xA1;
         public const int HT_CAPTION = 0x2;
 
         [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        public static extern int SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
 
         [DllImport("user32.dll")]
         public static extern bool ReleaseCapture();
+        
+        private const String Provider = "System.Data.SQLite";
+        private readonly String ConnectionString = "DataSource=" + AppDomain.CurrentDomain.BaseDirectory + "history.akm;Version=3;Compress=True;UTF8Encoding=True;Page Size=1024;FailIfMissing=False;Read Only=False;Pooling=True;Max Pool Size=100;";
+
+        private const Int32 DefaultWidth = 169;
+        private const Int32 DefaultHeight = 249;
+        private const Int32 ExpandedWidth = 613;
+        private const Int32 ExpandedHeight = 249;
+
+        private const String ExpandText = "Expand";
+        private const String CollapseText = "Collapse";
+        private const String StartText = "Start";
+        private const String StopText = "Stop";
+        private const String WhatRUDoingText = "What you are doing ?";
+
+        private Boolean IsStarted = false;
+        private Boolean IsUIExpanded = false;
+
+        private DateTime startTime;
+        private DateTime endTime;
+        private TimeSpan taskDuration;
+
+        public MainFormUX()
+        {
+            InitializeComponent();
+            InitializeSqliteDbProvider();
+            InitializeDatabase();
+
+            Size = new Size(DefaultWidth, DefaultHeight);
+        }
 
         private void MainFormUX_MouseDown(object sender, MouseEventArgs e)
         {
@@ -33,381 +60,96 @@ namespace Akuma
             }
         }
 
-        #endregion
-
-        #region aero glass
-        
-        public struct Margins
+        private void InitializeSqliteDbProvider()
         {
-            public int Left, Right, Top, Bottom;
-        }
-
-        public const int WM_NCHITTEST = 0x84;
-        public const int HT_CLIENT = 1;
-        public const int HTCAPTION = 2;
-
-        [DllImport("dwmapi.dll")]
-        public static extern void DwmExtendFrameIntoClientArea(IntPtr hWnd, ref Margins pMargins);
-
-        [DllImport("dwmapi.dll")]
-        public static extern void DwmIsCompositionEnabled(ref bool isEnabled);
-
-        private Margins _marg;
-        private Rectangle _botRect = Rectangle.Empty;
-        private bool isGlassSupported = true;
-
-        private bool isGlassEnabled()
-        {
-            //if (Environment.OSVersion.Version.Major < 6)
-            //{
-            //    isGlassSupported = false;
-            //}
-
-            DwmIsCompositionEnabled(ref isGlassSupported);
-
-            return isGlassSupported;
-        }
-
-        #region moving glass
-        protected override void WndProc(ref Message m)
-        {
-            base.WndProc(ref m);
-
-            if (m.Msg == WM_NCHITTEST && m.Result.ToInt32() == HT_CLIENT && IsOnGlass(m.LParam.ToInt32()))
+            try
             {
-                m.Result = new IntPtr(HT_CAPTION);
+                var configDs = ConfigurationManager.GetSection("system.data") as DataSet;
+                if (configDs != null)
+                    configDs.Tables[0]
+                        .Rows.Add("SQLite Data Provider", ".Net Framework Data Provider for SQLite",
+                            Provider, "System.Data.SQLite.SQLiteFactory, System.Data.SQLite");
+            }
+            catch { }
+        }
+
+        private void InitializeDatabase()
+        {
+            using (var trx = new TransactionScope())
+            {
+                using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
+                {
+                    // NOTE: EXISTS in sqlite return object {long} type and value is case-sensitive
+                    Boolean isTableExist = Convert.ToBoolean(
+                        db.QueryScalar<Int64>("SELECT EXISTS (SELECT * FROM sqlite_master WHERE type = 'table' AND name = 'Task');"));
+
+                    if (!isTableExist)
+                        CreateTimexSchema(db);
+
+                    trx.Complete();
+                }
             }
         }
 
-        private bool IsOnGlass(int lParam)
+        private static void CreateTimexSchema(Database db)
         {
-            if (!isGlassEnabled())
-                return false;
+            String ddlQuery = @"CREATE TABLE Task
+                            (
+                                JobDate VARCHAR(200),
+                                Start DATETIME,
+                                Stop DATETIME,
+                                JobDeskName VARCHAR(1000),
+                                TotalTime VARCHAR(200),
+                                Timespan VARCHAR(200)
+                            );";
 
-            int x = (lParam << 16) >> 16;
-            int y = lParam >> 16;
-
-            Point p = PointToClient(new Point(x, y));
-
-            if (_botRect.Contains(p))
-                return true;
-
-            return false;
-        } 
-        #endregion
-
-        #endregion
-
-        private Stopwatch _st;
-        private List<Task> _lstDo = new List<Task>();
-        private DateTime _starttime;
-        private DateTime _endtime;
-
-        private const String DB_NAME = "log.s3db";
-        private const String DB_CREATE_CMD = "create table logtbl(JobDate varchar(200),Start datetime,Stop datetime,JobDeskName varchar(1000),TotalTime varchar(200),Timespan varchar(200))";
-
-
-        private String _dblocation = String.Empty;
-        private String _constring = String.Empty;
-
-        private Boolean _started = false;
-        private Boolean _expanded = false;
-
-        private Boolean Started { get { return _started; } set { _started = value; } }
-        private Boolean Expanded { get { return _expanded; } set { _expanded = value; } }
-
-        private DBConnection _dbcon = DBConnection.GetInstance;
-        private SQLiteConnection _sqlcon = new SQLiteConnection();
-        private SQLiteDataReader sqlread = null;
-
-        public MainFormUX()
-        {
-            InitializeComponent();
-
-            Size = new Size(169, 249);
-
-            _st = new Stopwatch();
-            _lstDo = new List<Task>();
-            _dblocation = AppDomain.CurrentDomain.BaseDirectory + DB_NAME;
-            _constring = "Data Source=" + _dblocation + ";Version=3;Compress=false;";
-
-            _marg.Top = 0;
-            _marg.Left = 0;
-            _marg.Right = 0;
-            _marg.Bottom = -1;
-
-            //DwmExtendFrameIntoClientArea(Handle, ref _marg);
+            db.Execute(ddlQuery);
         }
 
-        private String Duration
+        private String CalculateDuration()
         {
-            get
+            String hourDuration = String.Empty;
+            String minDuration = String.Empty;
+
+            Int32 currentTick = 0;
+            if (startTime != new DateTime(1, 1, 1))
             {
-                String strElapsed = "";
-                Int64 elapsedMil = _st.ElapsedMilliseconds;
-                Int64 elapsedSec = elapsedMil / 1000;
-                Int64 elapsedMin = elapsedSec / 60;
-                Int64 elapsedHrs = elapsedMin / 60;
-
-                if (elapsedMin > 60)
-                {
-                    if (Started)
-                    {
-                        strElapsed = String.Format("{0} hrs {1} min {2} sec", elapsedHrs, elapsedMin - (elapsedHrs * 60), elapsedSec - (elapsedMin * 60));
-                    }
-                    else if (!Started)
-                    {
-                        strElapsed = String.Format("{0} hrs {1} min {2} sec {3} mil", elapsedHrs, elapsedMin - (elapsedHrs * 60), elapsedSec - (elapsedMin * 60), elapsedMil - (elapsedSec * 1000));
-                    }
-                }
-                else if (elapsedSec > 60)
-                {
-                    if (Started)
-                    {
-                        strElapsed = String.Format("{0} min {1} sec", elapsedMin, elapsedSec - (elapsedMin * 60));
-                    }
-                    else if (!Started)
-                    {
-                        strElapsed = String.Format("{0} min {1} sec {2} mil", elapsedMin, elapsedSec - (elapsedMin * 60), elapsedMil - (elapsedSec * 1000));
-                    }
-                }
-                else if (elapsedSec < 60)
-                {
-                    if (Started)
-                    {
-                        strElapsed = String.Format("{0} sec", elapsedSec);
-                    }
-                    else if (!Started)
-                    {
-                        strElapsed = String.Format("{0} sec {1} mil", elapsedSec, elapsedMil - (elapsedSec * 1000));
-                    }
-                }
-
-                return strElapsed;
+                currentTick = taskDuration.Seconds;
+                Int32 currentMin = taskDuration.Minutes;
+                Int32 currentHour = taskDuration.Hours;
+                if (currentHour > 0)
+                    hourDuration = currentHour.ToString().PadLeft(2, '0') + " h";
+                if (currentMin > 0)
+                    minDuration = currentMin.ToString().PadLeft(2, '0') + " m";
             }
-        }
-
-        private void ResetTimex()
-        {
-            Started = false;
-            _st.Reset();
-            lnkSt.Text = "Start";
-            lblTime.Text = "";
-            txtDo.Text = "";
-            FocusChanged();
-            _starttime = new DateTime();
-            _endtime = new DateTime();
-            timex.Stop();
-            timex.Enabled = false;
+            
+            return String.Format("{0} {1} {2}", hourDuration, minDuration, currentTick.ToString().PadLeft(2, '0') + " s").Trim();
         }
 
         private void FocusChanged()
         {
-            if (txtDo.Text.Equals("What you are doing ?"))
+            if (txtTask.Text.Equals(WhatRUDoingText))
             {
-                txtDo.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-                txtDo.ForeColor = SystemColors.WindowText;
-                txtDo.Text = "";
+                txtTask.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+                txtTask.ForeColor = SystemColors.WindowText;
+                txtTask.Text = String.Empty;
             }
-            else if (txtDo.Text.Equals(String.Empty))
+            else if (txtTask.Text.Equals(String.Empty))
             {
-                txtDo.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
-                txtDo.ForeColor = Color.DarkGray;
-                txtDo.Text = "What you are doing ?";
-            }
-        }
-
-        private Task convertRaw2Repo(String strJobDate, String strJobDeskName, String strTotalTime, String strTimespan, DateTime dtStart, DateTime dtStop)
-        {
-            Task retJobRepo = new Task();
-
-            retJobRepo.JobDate = strJobDate;
-            retJobRepo.JobDeskName = strJobDeskName;
-            retJobRepo.TotalTime = strTotalTime;
-            retJobRepo.Timespan = strTimespan;
-            retJobRepo.Start = dtStart;
-            retJobRepo.Stop = dtStop;
-
-            return retJobRepo;
-        }
-
-        private void setData(Task lastDo)
-        {
-            List<Task> lstRepo = new List<Task>();
-
-            try
-            {
-                if (File.Exists(_dblocation))
-                {
-                    String strCon = _constring + "New=false;";
-
-                    _sqlcon = _dbcon.OpenConnection(strCon);
-                    _sqlcon.Open();
-
-                    SQLiteCommand sqlcmd = _sqlcon.CreateCommand();
-                    SQLiteParameter sqlparam = new SQLiteParameter();
-                    sqlcmd.CommandText = "insert into log values(?,?,?,?,?,?)";
-
-                    sqlparam = new SQLiteParameter("@JobDate", DbType.String);
-                    sqlparam.Value = lastDo.JobDate;
-                    sqlcmd.Parameters.Add(sqlparam);
-
-                    sqlparam = new SQLiteParameter("@Start", DbType.DateTime);
-                    sqlparam.Value = lastDo.Start;
-                    sqlcmd.Parameters.Add(sqlparam);
-
-                    sqlparam = new SQLiteParameter("@Stop", DbType.DateTime);
-                    sqlparam.Value = lastDo.Stop;
-                    sqlcmd.Parameters.Add(sqlparam);
-
-                    sqlparam = new SQLiteParameter("@JobDeskName", DbType.String);
-                    sqlparam.Value = lastDo.JobDeskName;
-                    sqlcmd.Parameters.Add(sqlparam);
-
-                    sqlparam = new SQLiteParameter("@TotalTime", DbType.String);
-                    sqlparam.Value = lastDo.TotalTime;
-                    sqlcmd.Parameters.Add(sqlparam);
-
-                    sqlparam = new SQLiteParameter("@Timespan", DbType.String);
-                    sqlparam.Value = lastDo.Timespan;
-                    sqlcmd.Parameters.Add(sqlparam);
-
-                    Int32 rowAffected = sqlcmd.ExecuteNonQuery();
-
-                    if (rowAffected <= 0) { throw new Exception("Data not inserted"); }
-                }
-                else
-                {
-                    //String strCon = CON_STRING + "New=true;";
-
-                    //_sqlcon = _dbcon.OpenConnection(strCon);
-                    //_sqlcon.Open();
-
-                    //SQLiteCommand sqlcmd = _sqlcon.CreateCommand();
-                    //sqlcmd.CommandText = DB_CREATE_CMD;
-
-
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                if (sqlread != null) { sqlread.Close(); sqlread.Dispose(); }
-                if (_sqlcon != null) { _sqlcon.Close(); _sqlcon.Dispose(); }
+                txtTask.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
+                txtTask.ForeColor = Color.DarkGray;
+                txtTask.Text = WhatRUDoingText;
             }
         }
-
-        private List<Task> getData()
-        {
-            List<Task> retLstJob = new List<Task>();
-
-            try
-            {
-                if (File.Exists(_dblocation))
-                {
-                    String strCon = _constring + "New=false;";
-
-                    _sqlcon = _dbcon.OpenConnection(strCon);
-                    _sqlcon.Open();
-
-                    SQLiteCommand sqlcmd = _sqlcon.CreateCommand();
-                    sqlcmd.CommandText = "select * from log";
-                    sqlread = sqlcmd.ExecuteReader();
-
-                    while (sqlread.Read())
-                    {
-                        retLstJob.Add(convertRaw2Repo(sqlread["JobDate"].ToString(), sqlread["JobDeskName"].ToString(), sqlread["TotalTime"].ToString(), sqlread["Timespan"].ToString(), Convert.ToDateTime(sqlread["Start"]), Convert.ToDateTime(sqlread["Stop"])));
-                    }
-                }
-                else { throw new Exception("Database is't found"); }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                if (sqlread != null) { sqlread.Close(); sqlread.Dispose(); }
-                if (_sqlcon != null) { _sqlcon.Close(); _sqlcon.Dispose(); }
-            }
-
-            return retLstJob;
-        }
-
-        private List<Task> getData(String strJobDate)
-        {
-            List<Task> retLstJob = new List<Task>();
-
-            try
-            {
-                if (File.Exists(_dblocation))
-                {
-                    String strCon = _constring + "New=false;";
-
-                    _sqlcon = _dbcon.OpenConnection(strCon);
-                    _sqlcon.Open();
-
-                    SQLiteCommand sqlcmd = _sqlcon.CreateCommand();
-                    sqlcmd.CommandText = "select * from log where JobDate = '" + strJobDate + "'";
-                    sqlread = sqlcmd.ExecuteReader();
-
-                    while (sqlread.Read())
-                    {
-                        retLstJob.Add(convertRaw2Repo(sqlread["JobDate"].ToString(), sqlread["JobDeskName"].ToString(), sqlread["TotalTime"].ToString(), sqlread["Timespan"].ToString(), Convert.ToDateTime(sqlread["Start"]), Convert.ToDateTime(sqlread["Stop"])));
-                    }
-                }
-                else { throw new Exception("Database is't found"); }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                if (sqlread != null) { sqlread.Close(); sqlread.Dispose(); }
-                if (_sqlcon != null) { _sqlcon.Close(); _sqlcon.Dispose(); }
-            }
-
-            return retLstJob;
-        }
-
-        #region gradient panel and aero glass
 
         protected override void OnPaint(PaintEventArgs e)
         {
             try
             {
-                //if (isGlassSupported == false)
-                //{
-                //    Rectangle BaseRectangle = new Rectangle(0, 0, Width - 1, Height - 1);
+                Rectangle baseRectangle = new Rectangle(0, 0, Width, Height);
+                Brush gradientBrush = new LinearGradientBrush(baseRectangle, Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31), LinearGradientMode.Vertical);
 
-                //    Brush Gradient_Brush =
-                //        new LinearGradientBrush(
-                //        BaseRectangle,
-                //        Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31),
-                //        LinearGradientMode.Vertical);
-
-                //    e.Graphics.FillRectangle(Gradient_Brush, BaseRectangle);
-                //}
-                //else
-                //{
-                //    //FormBorderStyle = FormBorderStyle.Sizable; 
-                //    _botRect = ClientRectangle; //new Rectangle(0, 0, ClientSize.Width, marg.Bottom);
-                //}
-
-                Rectangle BaseRectangle = new Rectangle(0, 0, Width - 1, Height - 1);
-
-                Brush Gradient_Brush =
-                    new LinearGradientBrush(
-                    BaseRectangle,
-                    Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31),
-                    LinearGradientMode.Vertical);
-
-                e.Graphics.FillRectangle(Gradient_Brush, BaseRectangle);
-
+                e.Graphics.FillRectangle(gradientBrush, baseRectangle);
                 base.OnPaint(e);
             }
             catch (Exception ex)
@@ -416,9 +158,7 @@ namespace Akuma
             }
         }
 
-        #endregion
-
-        private void txtDo_Enter(object sender, EventArgs e)
+        private void txtTask_Enter(object sender, EventArgs e)
         {
             try
             {
@@ -430,7 +170,7 @@ namespace Akuma
             }
         }
 
-        private void txtDo_Leave(object sender, EventArgs e)
+        private void txtTask_Leave(object sender, EventArgs e)
         {
             try
             {
@@ -454,21 +194,21 @@ namespace Akuma
             }
         }
 
-        private void lnkTimesheet_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void lnkExpand_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             try
             {
-                if (Expanded)
+                if (IsUIExpanded)
                 {
-                    Expanded = false;
-                    lnkTimesheet.Text = "Expand Timesheet";
-                    Size = new Size(169, 249);
+                    IsUIExpanded = false;
+                    lnkExpand.Text = ExpandText;
+                    Size = new Size(DefaultWidth, DefaultHeight);
                 }
                 else
                 {
-                    Expanded = true;
-                    lnkTimesheet.Text = "Collapse Timesheet";
-                    Size = new Size(613, 249);
+                    IsUIExpanded = true;
+                    lnkExpand.Text = CollapseText;
+                    Size = new Size(ExpandedWidth, ExpandedHeight);
                 }
             }
             catch (Exception ex)
@@ -477,56 +217,68 @@ namespace Akuma
             }
         }
 
-        private void lnkSt_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void lnkStart_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             try
             {
-                if (Started)
+                if (IsStarted)
                 {
-                    _st.Stop();
-                    lblTime.Text = Duration;
-                    _endtime = DateTime.Now;
+                    timer.Stop();
+                    endTime = DateTime.Now;
+                    IsStarted = false;
 
-                    Task jobdesk = new Task();
-                    jobdesk.JobDate = String.Format("{0:MMM d, yyyy}", _starttime);
-                    jobdesk.Start = _starttime;
-                    jobdesk.Stop = _endtime;
-                    jobdesk.JobDeskName = txtDo.Text;
-                    jobdesk.TotalTime = Duration;
-                    jobdesk.Timespan = String.Format("{0:h:mm tt}", _starttime) + " - " + String.Format("{0:h:mm tt}", _endtime);
+                    lblTime.Text = String.Empty;
+                    txtTask.Text = String.Empty;
+                    txtTask.ReadOnly = false;
+                    lnkStart.Text = StartText;
+                    
+                    SaveTask();
+                    RefreshGrid();
 
-                    _lstDo.Add(jobdesk);
-                    dgvTimeSheet.DataSource = null;
-                    dgvTimeSheet.DataSource = _lstDo;
-                    dgvTimeSheet.Columns["Start"].Visible = false;
-                    dgvTimeSheet.Columns["Stop"].Visible = false;
-
-                    ResetTimex();
-
-
+                    startTime = new DateTime(1, 1, 1);
                 }
                 else
                 {
-                    _st.Start();
-                    timex.Enabled = true;
-                    timex.Start();
-                    Started = true;
-                    _starttime = DateTime.Now;
-                    lblTime.Text = "";
-                    lnkSt.Text = "Stop";
+                    timer.Start();
+                    startTime = DateTime.Now;
+                    endTime = new DateTime(1, 1, 1);
+                    IsStarted = true;
+
+                    lblTime.Text = String.Empty;
+                    txtTask.ReadOnly = true;
+                    lnkStart.Text = StopText;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void SaveTask()
+        {
+            using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
+                db.Execute("INSERT INTO Task VALUES (@0, @1, @2, @3, @4, @5)", startTime.ToString("dd MMMM yyyy"), startTime, endTime,
+                    txtTask.Text, CalculateDuration(), String.Format("{0:h:mm tt}", startTime) + " - " + String.Format("{0:h:mm tt}", endTime));
+        }
+
+        private void RefreshGrid()
+        {
+            DataTable dt = null;
+            using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
+                dt = db.QueryDataTable("SELECT * FROM Task");
+
+            dgvTask.DataSource = dt;
+            dgvTask.Columns["Start"].Visible = false;
+            dgvTask.Columns["Stop"].Visible = false;
         }
 
         private void timex_Tick(object sender, EventArgs e)
         {
             try
             {
-                lblTime.Text = Duration;
+                taskDuration = DateTime.Now - startTime;
+                lblTime.Text = CalculateDuration();
             }
             catch (Exception ex)
             {
