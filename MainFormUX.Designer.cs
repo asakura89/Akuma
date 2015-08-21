@@ -65,6 +65,7 @@
             // 
             // txtTask
             // 
+            this.txtTask.BackColor = System.Drawing.Color.White;
             this.txtTask.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtTask.Font = new System.Drawing.Font("Trebuchet MS", 9.75F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtTask.ForeColor = System.Drawing.Color.DarkGray;
@@ -82,36 +83,38 @@
             // 
             // lnkExit
             // 
+            this.lnkExit.ActiveLinkColor = System.Drawing.Color.DarkGray;
             this.lnkExit.AutoSize = true;
             this.lnkExit.BackColor = System.Drawing.Color.Transparent;
             this.lnkExit.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lnkExit.ForeColor = System.Drawing.Color.Transparent;
             this.lnkExit.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lnkExit.LinkColor = System.Drawing.Color.Red;
+            this.lnkExit.LinkColor = System.Drawing.Color.White;
             this.lnkExit.Location = new System.Drawing.Point(133, 227);
             this.lnkExit.Name = "lnkExit";
             this.lnkExit.Size = new System.Drawing.Size(25, 13);
             this.lnkExit.TabIndex = 3;
             this.lnkExit.TabStop = true;
             this.lnkExit.Text = "Exit";
-            this.lnkExit.VisitedLinkColor = System.Drawing.Color.Red;
+            this.lnkExit.VisitedLinkColor = System.Drawing.Color.White;
             this.lnkExit.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkExit_LinkClicked);
             // 
             // lnkExpand
             // 
+            this.lnkExpand.ActiveLinkColor = System.Drawing.Color.DarkGray;
             this.lnkExpand.AutoSize = true;
             this.lnkExpand.BackColor = System.Drawing.Color.Transparent;
             this.lnkExpand.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lnkExpand.ForeColor = System.Drawing.Color.Transparent;
             this.lnkExpand.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lnkExpand.LinkColor = System.Drawing.Color.Red;
+            this.lnkExpand.LinkColor = System.Drawing.Color.White;
             this.lnkExpand.Location = new System.Drawing.Point(9, 227);
             this.lnkExpand.Name = "lnkExpand";
             this.lnkExpand.Size = new System.Drawing.Size(45, 13);
             this.lnkExpand.TabIndex = 4;
             this.lnkExpand.TabStop = true;
             this.lnkExpand.Text = "Expand";
-            this.lnkExpand.VisitedLinkColor = System.Drawing.Color.Red;
+            this.lnkExpand.VisitedLinkColor = System.Drawing.Color.White;
             this.lnkExpand.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkExpand_LinkClicked);
             // 
             // lnkStart
@@ -141,6 +144,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dgvTask.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvTask.BackgroundColor = System.Drawing.Color.White;
             this.dgvTask.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvTask.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvTask.ContextMenuStrip = this.dgvContextMenu;
@@ -219,7 +223,7 @@
             // 
             // MainFormUX
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(613, 249);
@@ -230,11 +234,8 @@
             this.Controls.Add(this.lnkExit);
             this.Controls.Add(this.txtTask);
             this.Controls.Add(this.lblTime);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "MainFormUX";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Akuma";
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MainFormUX_MouseDown);
             ((System.ComponentModel.ISupportInitialize)(this.dgvTask)).EndInit();
             this.dgvContextMenu.ResumeLayout(false);
             this.formContextMenu.ResumeLayout(false);

@@ -2,25 +2,14 @@
 using System.Configuration;
 using System.Data;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
 using System.Transactions;
 using System.Windows.Forms;
 using Databossy;
 
 namespace Akuma
 {
-    public partial class MainFormUX : Form
+    public partial class MainFormUX : AkuForm
     {
-        public const int WM_NCLBUTTONDOWN = 0xA1;
-        public const int HT_CAPTION = 0x2;
-
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
-
-        [DllImport("user32.dll")]
-        public static extern bool ReleaseCapture();
-        
         private const String Provider = "System.Data.SQLite";
         private readonly String ConnectionString = "DataSource=" + AppDomain.CurrentDomain.BaseDirectory + "history.akm;Version=3;Compress=True;UTF8Encoding=True;Page Size=1024;FailIfMissing=False;Read Only=False;Pooling=True;Max Pool Size=100;";
 
@@ -49,15 +38,6 @@ namespace Akuma
             InitializeDatabase();
 
             Size = new Size(DefaultWidth, DefaultHeight);
-        }
-
-        private void MainFormUX_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-            }
         }
 
         private void InitializeSqliteDbProvider()
@@ -139,22 +119,6 @@ namespace Akuma
                 txtTask.Font = new Font("Trebuchet MS", 9.75F, FontStyle.Italic, GraphicsUnit.Point, ((byte)(0)));
                 txtTask.ForeColor = Color.DarkGray;
                 txtTask.Text = WhatRUDoingText;
-            }
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            try
-            {
-                Rectangle baseRectangle = new Rectangle(0, 0, Width, Height);
-                Brush gradientBrush = new LinearGradientBrush(baseRectangle, Color.FromArgb(76, 79, 83), Color.FromArgb(22, 26, 31), LinearGradientMode.Vertical);
-
-                e.Graphics.FillRectangle(gradientBrush, baseRectangle);
-                base.OnPaint(e);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
             }
         }
 
