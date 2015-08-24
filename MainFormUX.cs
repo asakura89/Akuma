@@ -31,7 +31,7 @@ namespace Akuma
         private DateTime endTime;
         private TimeSpan taskDuration;
 
-        public MainFormUX()
+        public MainFormUX() : base(ColorTranslator.FromHtml("#4c4f53"), ColorTranslator.FromHtml("#161a1f"), Color.Transparent)
         {
             InitializeComponent();
             InitializeSqliteDbProvider();

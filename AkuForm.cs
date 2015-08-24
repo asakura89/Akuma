@@ -70,7 +70,7 @@ namespace Akuma
             var formRect = new Rectangle(0, 0, Width, Height);
             Brush gradientBrush = EndGradientColor == Color.Transparent ?
                 (Brush) new SolidBrush(BeginGradientColor) : 
-                (Brush) new LinearGradientBrush(formRect, BeginGradientColor, EndGradientColor, LinearGradientMode.ForwardDiagonal);
+                (Brush) new LinearGradientBrush(formRect, BeginGradientColor, EndGradientColor, LinearGradientMode.Vertical);
             g.Clear(DefaultBackColor);
             g.FillRectangle(gradientBrush, formRect);
 
