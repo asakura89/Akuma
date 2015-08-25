@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Transactions;
 using System.Windows.Forms;
+using Akuma.Model;
 using Databossy;
 
 namespace Akuma
@@ -18,11 +23,14 @@ namespace Akuma
         private const Int32 ExpandedWidth = 613;
         private const Int32 ExpandedHeight = 249;
 
+        private const String Version = "0.1";
         private const String ExpandText = "Expand";
         private const String CollapseText = "Collapse";
         private const String StartText = "Start";
         private const String StopText = "Stop";
         private const String WhatRUDoingText = "What you are doing ?";
+        private const String ExceptionTitleText = "No no no my friend!";
+        private const String InformTitleText = "Ja jang!";
 
         private Boolean IsStarted = false;
         private Boolean IsUIExpanded = false;
@@ -36,6 +44,7 @@ namespace Akuma
             InitializeComponent();
             InitializeSqliteDbProvider();
             InitializeDatabase();
+            InitializeData();
 
             Size = new Size(DefaultWidth, DefaultHeight);
         }
@@ -61,7 +70,7 @@ namespace Akuma
                 {
                     // NOTE: EXISTS in sqlite return object {long} type and value is case-sensitive
                     Boolean isTableExist = Convert.ToBoolean(
-                        db.QueryScalar<Int64>("SELECT EXISTS (SELECT * FROM sqlite_master WHERE type = 'table' AND name = 'Task');"));
+                        db.QueryScalar<Int64>("SELECT EXISTS (SELECT * FROM sqlite_master WHERE type = 'table' AND name = 'Akuma');"));
 
                     if (!isTableExist)
                         CreateTimexSchema(db);
@@ -73,17 +82,47 @@ namespace Akuma
 
         private static void CreateTimexSchema(Database db)
         {
-            String ddlQuery = @"CREATE TABLE Task
-                            (
-                                JobDate VARCHAR(200),
-                                Start DATETIME,
-                                Stop DATETIME,
-                                JobDeskName VARCHAR(1000),
-                                TotalTime VARCHAR(200),
-                                Timespan VARCHAR(200)
-                            );";
+            String ddlQuery =
+                @"CREATE TABLE [Akuma]
+                (
+                    [Version] VARCHAR(6)
+                );
 
-            db.Execute(ddlQuery);
+                CREATE TABLE [TaskList]
+                (
+                    [Id] VARCHAR(40) PRIMARY KEY NOT NULL,
+                    [Title] VARCHAR(256) NOT NULL
+                );
+
+                CREATE TABLE [Task]
+                (
+                    [Id] VARCHAR(40) NOT NULL,
+                    [ListId] VARCHAR(40) NOT NULL,
+                    [Title] VARCHAR(256) NOT NULL,
+                    [Start] DATETIME NOT NULL,
+                    [Stop] DATETIME NOT NULL,
+                    [TotalTime] VARCHAR(200),
+                    [Timespan] VARCHAR(200),
+                    PRIMARY KEY (Id, ListId)
+                );
+
+                INSERT INTO Akuma VALUES (@0);
+                INSERT INTO TaskList VALUES ('Home', 'Home')";
+
+            db.Execute(ddlQuery, Version);
+        }
+
+        private void InitializeData()
+        {
+            using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
+            {
+                IEnumerable<TaskList> taskList = db.Query<TaskList>("SELECT * FROM TaskList");
+                cmbTaskList.DataSource = taskList.ToList();
+                cmbTaskList.DisplayMember = "Title";
+                cmbTaskList.ValueMember = "Id";
+                if (cmbTaskList.Items.Count > 0)
+                    cmbTaskList.SelectedIndex = 0;
+            }
         }
 
         private String CalculateDuration()
@@ -98,12 +137,12 @@ namespace Akuma
                 Int32 currentMin = taskDuration.Minutes;
                 Int32 currentHour = taskDuration.Hours;
                 if (currentHour > 0)
-                    hourDuration = currentHour.ToString().PadLeft(2, '0') + " h";
+                    hourDuration = currentHour.ToString().PadLeft(2, '0') + "h";
                 if (currentMin > 0)
-                    minDuration = currentMin.ToString().PadLeft(2, '0') + " m";
+                    minDuration = currentMin.ToString().PadLeft(2, '0') + "m";
             }
             
-            return String.Format("{0} {1} {2}", hourDuration, minDuration, currentTick.ToString().PadLeft(2, '0') + " s").Trim();
+            return String.Format("{0} {1} {2}", hourDuration, minDuration, currentTick.ToString().PadLeft(2, '0') + "s").Trim();
         }
 
         private void FocusChanged()
@@ -122,6 +161,18 @@ namespace Akuma
             }
         }
 
+        private void cmbTaskList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                RefreshGrid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
         private void txtTask_Enter(object sender, EventArgs e)
         {
             try
@@ -130,7 +181,7 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
 
@@ -142,7 +193,7 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
 
@@ -154,7 +205,7 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
 
@@ -177,7 +228,7 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
 
@@ -185,19 +236,22 @@ namespace Akuma
         {
             try
             {
+                if (String.IsNullOrEmpty(txtTask.Text) || txtTask.Text == WhatRUDoingText)
+                    throw new InvalidOperationException("You forgot to tell me what task it is.\r\n[Hint] Lookie the textbox above start button.");
+
                 if (IsStarted)
                 {
                     timer.Stop();
                     endTime = DateTime.Now;
                     IsStarted = false;
 
+                    SaveTask();
+                    RefreshGrid();
+
                     lblTime.Text = String.Empty;
                     txtTask.Text = String.Empty;
                     txtTask.ReadOnly = false;
                     lnkStart.Text = StartText;
-                    
-                    SaveTask();
-                    RefreshGrid();
 
                     startTime = new DateTime(1, 1, 1);
                 }
@@ -215,26 +269,39 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
 
         private void SaveTask()
         {
+            String taskId = Keywielder.Keywielder.New().AddGUIDString().BuildKey();
+            String listId = ((TaskList) cmbTaskList.SelectedItem ?? new TaskList()).Id;
             using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
-                db.Execute("INSERT INTO Task VALUES (@0, @1, @2, @3, @4, @5)", startTime.ToString("dd MMMM yyyy"), startTime, endTime,
-                    txtTask.Text, CalculateDuration(), String.Format("{0:h:mm tt}", startTime) + " - " + String.Format("{0:h:mm tt}", endTime));
+                db.Execute("INSERT INTO Task VALUES (@0, @1, @2, @3, @4, @5, @6)", taskId, listId, txtTask.Text, startTime, endTime,
+                    CalculateDuration(), String.Format("{0:[h:mm:ss:tt}", startTime) + "-" + String.Format("{0:h:mm:ss:tt]}", endTime));
         }
 
         private void RefreshGrid()
         {
-            DataTable dt = null;
-            using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
-                dt = db.QueryDataTable("SELECT * FROM Task");
+            DataTable dt = GetTaskListByCurrentSelectedListId();
 
             dgvTask.DataSource = dt;
+            dgvTask.Columns["Id"].Visible = false;
+            dgvTask.Columns["ListId"].Visible = false;
             dgvTask.Columns["Start"].Visible = false;
             dgvTask.Columns["Stop"].Visible = false;
+            dgvTask.Columns["ListTitle"].Visible = false;
+        }
+
+        private DataTable GetTaskListByCurrentSelectedListId()
+        {
+            DataTable dt = null;
+            String listId = ((TaskList)cmbTaskList.SelectedItem ?? new TaskList()).Id;
+            using (var db = new Database(ConnectionString, Database.ConnectionStringType.ConnectionString, Provider))
+                dt = db.QueryDataTable("SELECT t.*, tl.Title ListTitle FROM Task t JOIN TaskList tl ON t.ListId = tl.[Id] WHERE ListId = @0", listId);
+
+            return dt;
         }
 
         private void timex_Tick(object sender, EventArgs e)
@@ -246,57 +313,7 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Application.Exit();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void hideToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Hide();
-                WindowState = FormWindowState.Minimized;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void exitToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Application.Exit();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void showToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Show();
-                WindowState = FormWindowState.Normal;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
 
@@ -317,7 +334,112 @@ namespace Akuma
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void newListToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void newTaskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void excelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void textToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DataTable dt = GetTaskListByCurrentSelectedListId();
+                ExportToTodotxtFormat(dt);
+
+                MessageBox.Show("Done.", InformTitleText);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void ExportToTodotxtFormat(DataTable dt)
+        {
+            var todotxtList = new StringBuilder();
+            DataRowCollection drList = dt.Rows;
+            foreach (DataRow dr in drList)
+            {
+                var todotxt = String.Format("{0} {1} +{2} {3} {4}", Convert.ToDateTime(dr["Start"]).ToString("yyyy-MM-dd"), dr["Title"],
+                    dr["ListTitle"], dr["TotalTime"], dr["Timespan"]);
+                todotxtList.AppendLine(todotxt);
+            }
+
+            File.AppendAllText("Exported_Akuma_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".txt", todotxtList.ToString(), Encoding.UTF8);
+        }
+
+        private void showToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Show();
+                WindowState = FormWindowState.Normal;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void hideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Hide();
+                WindowState = FormWindowState.Minimized;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DialogResult isExit = MessageBox.Show(this, "Sure to exit?", "Confirmation", MessageBoxButtons.YesNo);
+                if (isExit == DialogResult.Yes)
+                    Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, ExceptionTitleText);
             }
         }
     }

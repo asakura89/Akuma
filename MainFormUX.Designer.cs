@@ -39,13 +39,21 @@
             this.dgvTask = new System.Windows.Forms.DataGridView();
             this.dgvContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.generateReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excelToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.textToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.formContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.newListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newTaskToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.textToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.trayContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.cmbTaskList = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTask)).BeginInit();
             this.dgvContextMenu.SuspendLayout();
             this.formContextMenu.SuspendLayout();
@@ -69,9 +77,9 @@
             this.txtTask.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtTask.Font = new System.Drawing.Font("Trebuchet MS", 9.75F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtTask.ForeColor = System.Drawing.Color.DarkGray;
-            this.txtTask.Location = new System.Drawing.Point(12, 116);
+            this.txtTask.Location = new System.Drawing.Point(12, 154);
             this.txtTask.Name = "txtTask";
-            this.txtTask.Size = new System.Drawing.Size(145, 23);
+            this.txtTask.Size = new System.Drawing.Size(146, 23);
             this.txtTask.TabIndex = 1;
             this.txtTask.Text = "What you are doing ?";
             this.txtTask.Enter += new System.EventHandler(this.txtTask_Enter);
@@ -126,7 +134,7 @@
             this.lnkStart.ForeColor = System.Drawing.Color.White;
             this.lnkStart.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.lnkStart.LinkColor = System.Drawing.Color.White;
-            this.lnkStart.Location = new System.Drawing.Point(60, 153);
+            this.lnkStart.Location = new System.Drawing.Point(60, 191);
             this.lnkStart.Name = "lnkStart";
             this.lnkStart.Size = new System.Drawing.Size(35, 17);
             this.lnkStart.TabIndex = 5;
@@ -162,33 +170,90 @@
             this.dgvContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.generateReportToolStripMenuItem});
             this.dgvContextMenu.Name = "dgvContextMenu";
-            this.dgvContextMenu.Size = new System.Drawing.Size(160, 26);
+            this.dgvContextMenu.Size = new System.Drawing.Size(108, 26);
             // 
             // generateReportToolStripMenuItem
             // 
+            this.generateReportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.excelToolStripMenuItem1,
+            this.textToolStripMenuItem1});
             this.generateReportToolStripMenuItem.Name = "generateReportToolStripMenuItem";
-            this.generateReportToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
-            this.generateReportToolStripMenuItem.Text = "Generate Report";
+            this.generateReportToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.generateReportToolStripMenuItem.Text = "Export";
+            // 
+            // excelToolStripMenuItem1
+            // 
+            this.excelToolStripMenuItem1.Name = "excelToolStripMenuItem1";
+            this.excelToolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
+            this.excelToolStripMenuItem1.Text = "Excel";
+            this.excelToolStripMenuItem1.Click += new System.EventHandler(this.excelToolStripMenuItem_Click);
+            // 
+            // textToolStripMenuItem1
+            // 
+            this.textToolStripMenuItem1.Name = "textToolStripMenuItem1";
+            this.textToolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
+            this.textToolStripMenuItem1.Text = "Text";
+            this.textToolStripMenuItem1.Click += new System.EventHandler(this.textToolStripMenuItem_Click);
             // 
             // formContextMenu
             // 
             this.formContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newListToolStripMenuItem,
+            this.newTaskToolStripMenuItem,
+            this.exportToolStripMenuItem,
             this.hideToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.formContextMenu.Name = "formContextMenu";
-            this.formContextMenu.Size = new System.Drawing.Size(100, 48);
+            this.formContextMenu.Size = new System.Drawing.Size(126, 114);
+            // 
+            // newListToolStripMenuItem
+            // 
+            this.newListToolStripMenuItem.Name = "newListToolStripMenuItem";
+            this.newListToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            this.newListToolStripMenuItem.Text = "New List";
+            this.newListToolStripMenuItem.Click += new System.EventHandler(this.newListToolStripMenuItem_Click);
+            // 
+            // newTaskToolStripMenuItem
+            // 
+            this.newTaskToolStripMenuItem.Name = "newTaskToolStripMenuItem";
+            this.newTaskToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            this.newTaskToolStripMenuItem.Text = "New Task";
+            this.newTaskToolStripMenuItem.Click += new System.EventHandler(this.newTaskToolStripMenuItem_Click);
+            // 
+            // exportToolStripMenuItem
+            // 
+            this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.excelToolStripMenuItem,
+            this.textToolStripMenuItem});
+            this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            this.exportToolStripMenuItem.Text = "Export";
+            // 
+            // excelToolStripMenuItem
+            // 
+            this.excelToolStripMenuItem.Name = "excelToolStripMenuItem";
+            this.excelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.excelToolStripMenuItem.Text = "Excel";
+            this.excelToolStripMenuItem.Click += new System.EventHandler(this.excelToolStripMenuItem_Click);
+            // 
+            // textToolStripMenuItem
+            // 
+            this.textToolStripMenuItem.Name = "textToolStripMenuItem";
+            this.textToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.textToolStripMenuItem.Text = "Text";
+            this.textToolStripMenuItem.Click += new System.EventHandler(this.textToolStripMenuItem_Click);
             // 
             // hideToolStripMenuItem
             // 
             this.hideToolStripMenuItem.Name = "hideToolStripMenuItem";
-            this.hideToolStripMenuItem.Size = new System.Drawing.Size(99, 22);
+            this.hideToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             this.hideToolStripMenuItem.Text = "Hide";
             this.hideToolStripMenuItem.Click += new System.EventHandler(this.hideToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(99, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -212,7 +277,7 @@
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
             this.exitToolStripMenuItem1.Size = new System.Drawing.Size(103, 22);
             this.exitToolStripMenuItem1.Text = "Exit";
-            this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem1_Click);
+            this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // trayIcon
             // 
@@ -221,6 +286,17 @@
             this.trayIcon.Visible = true;
             this.trayIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.trayIcon_MouseDoubleClick);
             // 
+            // cmbTaskList
+            // 
+            this.cmbTaskList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTaskList.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cmbTaskList.FormattingEnabled = true;
+            this.cmbTaskList.Location = new System.Drawing.Point(12, 122);
+            this.cmbTaskList.Name = "cmbTaskList";
+            this.cmbTaskList.Size = new System.Drawing.Size(146, 26);
+            this.cmbTaskList.TabIndex = 7;
+            this.cmbTaskList.SelectedIndexChanged += new System.EventHandler(this.cmbTaskList_SelectedIndexChanged);
+            // 
             // MainFormUX
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 18F);
@@ -228,6 +304,7 @@
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(613, 249);
             this.ContextMenuStrip = this.formContextMenu;
+            this.Controls.Add(this.cmbTaskList);
             this.Controls.Add(this.dgvTask);
             this.Controls.Add(this.lnkStart);
             this.Controls.Add(this.lnkExpand);
@@ -263,5 +340,13 @@
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem1;
         private System.Windows.Forms.NotifyIcon trayIcon;
+        private System.Windows.Forms.ToolStripMenuItem excelToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem textToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem newListToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem newTaskToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem textToolStripMenuItem;
+        private System.Windows.Forms.ComboBox cmbTaskList;
     }
 }
