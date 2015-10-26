@@ -69,7 +69,7 @@
             this.lblTime.Location = new System.Drawing.Point(28, 28);
             this.lblTime.Name = "lblTime";
             this.lblTime.Size = new System.Drawing.Size(0, 17);
-            this.lblTime.TabIndex = 0;
+            this.lblTime.TabIndex = 9;
             // 
             // txtTask
             // 
@@ -81,7 +81,7 @@
             this.txtTask.Name = "txtTask";
             this.txtTask.Size = new System.Drawing.Size(146, 23);
             this.txtTask.TabIndex = 1;
-            this.txtTask.Text = "What you are doing ?";
+            this.txtTask.Text = "What are you doing ?";
             this.txtTask.Enter += new System.EventHandler(this.txtTask_Enter);
             this.txtTask.Leave += new System.EventHandler(this.txtTask_Leave);
             // 
@@ -101,7 +101,7 @@
             this.lnkExit.Location = new System.Drawing.Point(133, 227);
             this.lnkExit.Name = "lnkExit";
             this.lnkExit.Size = new System.Drawing.Size(25, 13);
-            this.lnkExit.TabIndex = 3;
+            this.lnkExit.TabIndex = 4;
             this.lnkExit.TabStop = true;
             this.lnkExit.Text = "Exit";
             this.lnkExit.VisitedLinkColor = System.Drawing.Color.White;
@@ -119,7 +119,7 @@
             this.lnkExpand.Location = new System.Drawing.Point(9, 227);
             this.lnkExpand.Name = "lnkExpand";
             this.lnkExpand.Size = new System.Drawing.Size(45, 13);
-            this.lnkExpand.TabIndex = 4;
+            this.lnkExpand.TabIndex = 3;
             this.lnkExpand.TabStop = true;
             this.lnkExpand.Text = "Expand";
             this.lnkExpand.VisitedLinkColor = System.Drawing.Color.White;
@@ -137,7 +137,7 @@
             this.lnkStart.Location = new System.Drawing.Point(60, 191);
             this.lnkStart.Name = "lnkStart";
             this.lnkStart.Size = new System.Drawing.Size(35, 17);
-            this.lnkStart.TabIndex = 5;
+            this.lnkStart.TabIndex = 2;
             this.lnkStart.TabStop = true;
             this.lnkStart.Text = "Start";
             this.lnkStart.VisitedLinkColor = System.Drawing.Color.White;
@@ -163,7 +163,7 @@
             this.dgvTask.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader;
             this.dgvTask.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvTask.Size = new System.Drawing.Size(420, 225);
-            this.dgvTask.TabIndex = 6;
+            this.dgvTask.TabIndex = 5;
             // 
             // dgvContextMenu
             // 
@@ -232,14 +232,14 @@
             // excelToolStripMenuItem
             // 
             this.excelToolStripMenuItem.Name = "excelToolStripMenuItem";
-            this.excelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.excelToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.excelToolStripMenuItem.Text = "Excel";
             this.excelToolStripMenuItem.Click += new System.EventHandler(this.excelToolStripMenuItem_Click);
             // 
             // textToolStripMenuItem
             // 
             this.textToolStripMenuItem.Name = "textToolStripMenuItem";
-            this.textToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.textToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.textToolStripMenuItem.Text = "Text";
             this.textToolStripMenuItem.Click += new System.EventHandler(this.textToolStripMenuItem_Click);
             // 
@@ -294,7 +294,7 @@
             this.cmbTaskList.Location = new System.Drawing.Point(12, 122);
             this.cmbTaskList.Name = "cmbTaskList";
             this.cmbTaskList.Size = new System.Drawing.Size(146, 26);
-            this.cmbTaskList.TabIndex = 7;
+            this.cmbTaskList.TabIndex = 0;
             this.cmbTaskList.SelectedIndexChanged += new System.EventHandler(this.cmbTaskList_SelectedIndexChanged);
             // 
             // MainFormUX

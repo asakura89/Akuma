@@ -10,6 +10,9 @@ using System.Transactions;
 using System.Windows.Forms;
 using Akuma.Model;
 using Databossy;
+using NPOI.HSSF.UserModel;
+using NPOI.SS.UserModel;
+using HorizontalAlignment = NPOI.SS.UserModel.HorizontalAlignment;
 
 namespace Akuma
 {
@@ -342,7 +345,9 @@ namespace Akuma
         {
             try
             {
-
+                new Confirm("You sure want to Confirm this?").ShowDialog(this);
+                new Alert("This is Alert!").ShowDialog(this);
+                new Prompt("What's your favorite color?").ShowDialog(this);
             }
             catch (Exception ex)
             {
@@ -366,11 +371,76 @@ namespace Akuma
         {
             try
             {
+                DataTable dt = GetTaskListByCurrentSelectedListId();
+                ExportToExcelFormat(dt);
 
+                MessageBox.Show("Done.", InformTitleText);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, ExceptionTitleText);
+            }
+        }
+
+        private void ExportToExcelFormat(DataTable dt)
+        {
+            const String FileExtension = ".xls";
+            var workbook = CreateExcelSheet(dt);
+            using (var stream = new MemoryStream())
+            {
+                workbook.Write(stream);
+                File.WriteAllBytes(GetExportedAkumaFilename() + FileExtension, stream.GetBuffer());
+            }
+        }
+
+        private HSSFWorkbook CreateExcelSheet(DataTable dt)
+        {
+            var workbook = new HSSFWorkbook();
+            var sheet = workbook.CreateSheet("Akuma");
+            var font = workbook.CreateFont();
+            font.FontHeightInPoints = 10;
+            font.Color = NPOI.HSSF.Util.HSSFColor.WHITE.index;
+            font.FontName = "Arial";
+            font.Boldweight = (Int16)FontBoldWeight.BOLD;
+
+            var style = workbook.CreateCellStyle();
+            style.FillBackgroundColor = NPOI.HSSF.Util.HSSFColor.GREY_25_PERCENT.index;
+            style.FillPattern = FillPatternType.SOLID_FOREGROUND;
+            style.Alignment = HorizontalAlignment.CENTER;
+
+            CreateHeader(ref sheet, style, font, dt);
+            PopulateData(ref sheet, dt);
+
+            return workbook;
+        }
+
+        private void CreateHeader(ref ISheet sheet, ICellStyle style, IFont font, DataTable dt)
+        {
+            var header = sheet.CreateRow(0);
+            var columnHeader = new String[dt.Columns.Count];
+            for (int i = 0; i < dt.Columns.Count; i++)
+                columnHeader[i] = dt.Columns[i].ColumnName;
+
+            for (int colIdx = 0; colIdx < columnHeader.Length; colIdx++)
+            {
+                var cell = header.CreateCell(colIdx);
+                cell.SetCellValue(columnHeader[colIdx]);
+                cell.CellStyle = style;
+                cell.CellStyle.SetFont(font);
+            }
+        }
+
+        private void PopulateData(ref ISheet sheet, DataTable dt)
+        {
+            for (int rowIdx = 1; rowIdx < dt.Rows.Count; rowIdx++)
+            {
+                var row = sheet.CreateRow(rowIdx);
+                Int32 columnLength = dt.Columns.Count;
+                for (int colIdx = 0; colIdx < columnLength; colIdx++)
+                {
+                    row.CreateCell(colIdx).SetCellValue(dt.Rows[rowIdx][colIdx].ToString());
+                    sheet.AutoSizeColumn(colIdx);
+                }
             }
         }
 
@@ -391,6 +461,7 @@ namespace Akuma
 
         private void ExportToTodotxtFormat(DataTable dt)
         {
+            const String FileExtension = ".txt";
             var todotxtList = new StringBuilder();
             DataRowCollection drList = dt.Rows;
             foreach (DataRow dr in drList)
@@ -400,7 +471,12 @@ namespace Akuma
                 todotxtList.AppendLine(todotxt);
             }
 
-            File.AppendAllText("Exported_Akuma_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".txt", todotxtList.ToString(), Encoding.UTF8);
+            File.AppendAllText(GetExportedAkumaFilename() + FileExtension, todotxtList.ToString(), Encoding.UTF8);
+        }
+
+        private String GetExportedAkumaFilename()
+        {
+            return "Exported_Akuma_" + DateTime.Now.ToString("yyyyMMddHHmmss");
         }
 
         private void showToolStripMenuItem_Click(object sender, EventArgs e)

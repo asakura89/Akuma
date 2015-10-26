@@ -71,13 +71,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AkuButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="AkuColor.cs" />
     <Compile Include="AkuForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alert.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Confirm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Databossy.cs" />
     <Compile Include="Keywielder.cs" />
     <Compile Include="Model\TaskList.cs" />
     <Compile Include="Model\Task.cs" />
+    <Compile Include="Prompt.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Task.cs" />
     <Compile Include="MainFormUX.cs">
       <SubType>Form</SubType>
